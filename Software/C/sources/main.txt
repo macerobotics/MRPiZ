@@ -1,0 +1,13 @@
+#include "MRPi1.h"
+
+int main(int argc, char* argv[])
+{
+  init();
+
+  printf("Hello MRPi1\n");
+
+  led(1,1);
+  led(2,1);
+  led(3,1);
+  
+}
