@@ -146,14 +146,8 @@ public class MRPiZ {
 	  float tension;
 	  
         this.serial.write("#BAT!");
-		
-		// attendre réception
-		while (b_data_reception != true)
-		{
-        }
-		b_data_reception = false;
 
-		tension = Float.parseFloat(dataReception);
+		tension = readDataFloat();
 
 		return (tension);
 
@@ -169,13 +163,7 @@ public class MRPiZ {
 	  
         this.serial.write("#FV!");
 		
-		// attendre réception
-		while (b_data_reception != true)
-		{
-        }
-		b_data_reception = false;
-
-		version = Float.parseFloat(dataReception);
+		version = readDataFloat();
 
 		return (version);
 
@@ -193,13 +181,8 @@ public class MRPiZ {
 		
       this.serial.write(comm);
 		
-      // attendre réception
-	  while (b_data_reception != true)
-	  {
-      }
-	  b_data_reception = false;
-
-	  distance = Float.parseFloat(dataReception);
+      distance = readDataFloat();
+	  
 	  return (distance); 
 
 	}
@@ -213,13 +196,8 @@ public class MRPiZ {
 
       this.serial.write("#EDL!");
 		
-      // attendre réception
-	  while (b_data_reception != true)
-	  {
-      }
-	  b_data_reception = false;
+      encoder = readDataFloat();
 
-	  encoder = Float.parseFloat(dataReception);
 	  return (encoder); 
 
 	}
@@ -233,13 +211,8 @@ public class MRPiZ {
 
       this.serial.write("#EDR!");
 		
-      // attendre réception
-	  while (b_data_reception != true)
-	  {
-      }
-	  b_data_reception = false;
+      encoder = readDataFloat();
 
-	  encoder = Float.parseFloat(dataReception);
 	  return (encoder); 
 
 	}
@@ -253,14 +226,24 @@ public class MRPiZ {
 
       this.serial.write("#VUSB!");
 		
-      // attendre réception
-	  while (b_data_reception != true)
-	  {
-      }
-	  b_data_reception = false;
+      tension = readDataFloat();
 
-	  tension = Float.parseFloat(dataReception);
 	  return (tension); 
+
+	}
+	
+	  /**
+     * This method returns the usb tension
+     * @return float
+  */
+  public int readSwitch() throws IOException {
+	  float state;
+
+      this.serial.write("#SW!");
+		
+      state = readDataFloat();
+
+	  return ((int)state); 
 
 	}
 	
@@ -273,13 +256,8 @@ public class MRPiZ {
 
       this.serial.write("#POX!");
 		
-      // attendre réception
-	  while (b_data_reception != true)
-	  {
-      }
-	  b_data_reception = false;
+      position = readDataFloat();
 
-	  position = Float.parseFloat(dataReception);
 	  return (position); 
 
 	}
@@ -293,13 +271,8 @@ public class MRPiZ {
 
       this.serial.write("#POY!");
 		
-      // attendre réception
-	  while (b_data_reception != true)
-	  {
-      }
-	  b_data_reception = false;
+      position = readDataFloat();
 
-	  position = Float.parseFloat(dataReception);
 	  return (position); 
 
 	}
@@ -342,13 +315,15 @@ this.serial.write("#CRD!");
         this.serial.write("#CRD!");
 	}
 	
-		  /**
-     * 
-     * @return None
+	
+  /**
+  * 
+  * @return None
   */
-  public void forwardC(int speed, int distance) throws IOException {
+  private void forwardC(int speed, int distance) throws IOException {
 	StringBuilder sb = new StringBuilder();
 	String command;
+	float value=0;
 		
 		sb.append("#MFC,");
 		sb.append(distance);
@@ -359,15 +334,62 @@ this.serial.write("#CRD!");
 		command = sb.toString();
 		
         this.serial.write(command);
+		
+	   while(value != 3)
+       {
+         this.serial.write("#TGS,1!");    
+         value = readDataFloat();
+    
+         if(value == 4)
+         {
+           System.out.println("error : speed to hight\n");
+           value = 3;
+         }
+       }
 	}
+	
+	
+  /**
+  * 
+  * @return None
+  */
+  private void backC(int speed, int distance) throws IOException {
+	StringBuilder sb = new StringBuilder();
+	String command;
+	float value=0;
+		
+		sb.append("#MBC,");
+		sb.append(distance);
+		sb.append(",");
+		sb.append(speed);
+		sb.append("!");
+		
+		command = sb.toString();
+		
+        this.serial.write(command);
+		
+	   while(value != 3)
+       {
+         this.serial.write("#TGS,1!");    
+         value = readDataFloat();
+    
+         if(value == 4)
+         {
+           System.out.println("error : speed to hight\n");
+           value = 3;
+         }
+       }
+	}
+	
 	
    /**
      * 
      * @return None
   */
-  public void turnRightC(int speed, int distance) throws IOException {
+  private void turnRightC(int speed, int distance) throws IOException {
 	StringBuilder sb = new StringBuilder();
 	String command;
+	float value=0;
 		
 		sb.append("#TRC,");
 		sb.append(distance);
@@ -378,15 +400,28 @@ this.serial.write("#CRD!");
 		command = sb.toString();
 		
         this.serial.write(command);
+		
+	   while(value != 3)
+       {
+         this.serial.write("#TGS,2!");    
+         value = readDataFloat();
+    
+         if(value == 4)
+         {
+           System.out.println("error : speed to hight\n");
+           value = 3;
+         }
+       }
 	}
 	
-	   /**
-     * 
-     * @return None
+  /**
+  * 
+  * @return None
   */
-  public void turnLeftC(int speed, int distance) throws IOException {
+  private void turnLeftC(int speed, int distance) throws IOException {
 	StringBuilder sb = new StringBuilder();
 	String command;
+	float value=0;
 		
 		sb.append("#TLC,");
 		sb.append(distance);
@@ -397,14 +432,75 @@ this.serial.write("#CRD!");
 		command = sb.toString();
 		
         this.serial.write(command);
+		
+	   while(value != 3)
+       {
+         this.serial.write("#TGS,2!");    
+         value = readDataFloat();
+    
+         if(value == 4)
+         {
+           System.out.println("error : speed to hight\n");
+           value = 3;
+         }
+       }
 	}
 	
-		   /**
-     * 
-     * @return None
+  /**
+  * 
+  * @return None
   */
   public void turnRight_degree(int speed, int degree) throws IOException {
        turnRightC(speed, degree*546/90);
+	}
+	
+	  /**
+  * 
+  * @return None
+  */
+  public void turnLeft_degree(int speed, int degree) throws IOException {
+       turnLeftC(speed, degree*546/90);
+	}
+	
+  /**
+  * 
+  * @return None
+  */
+  public void forward_mm(int speed, int distance) throws IOException {
+       forwardC(speed, distance*4);
+	}
+	
+  /**
+  * 
+  * @return None
+  */
+  public void back_mm(int speed, int distance) throws IOException {
+       backC(speed, distance*4);
+	}
+
+	
+  private float readDataFloat() throws IOException {
+	  	// attendre réception
+		while (b_data_reception != true)
+		{
+			// wait
+        }
+		b_data_reception = false;
+
+		return( Float.parseFloat(dataReception) );
+
+	}
+	
+  private int readDataInt() throws IOException {
+	  	// attendre réception
+		while (b_data_reception != true)
+		{
+			// wait
+        }
+		b_data_reception = false;
+
+		return( Integer.parseInt(dataReception) );
+
 	}
 	
 	
