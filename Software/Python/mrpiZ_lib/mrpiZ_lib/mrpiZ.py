@@ -4,8 +4,8 @@
 #  Python API
 #  This library is used for the MRPiZ robot.
 #  http://www.macerobotics.com
-#  Date : 21/11/2017
-#  Version : 0.2
+#  Date : 25/04/2018
+#  Version : 0.3.1
 #
 #  MIT Licence
 
@@ -40,13 +40,20 @@ __all__ = ['forward_mm']
 __all__ = ['back_mm']
 __all__ = ['motorRight']
 __all__ = ['motorLeft']
+__all__ = ['motorsWrite']
 __all__ = ['robotPositionX']
 __all__ = ['robotPositionY']
 __all__ = ['robotPositionO']
 __all__ = ['encoderLeft']
 __all__ = ['encoderRight']
+__all__ = ['readVusb']
+__all__ = ['resetUc']
 __all__ = ['writeCommand']
 __all__ = ['readData']
+__all__ = ['forwardmm']
+__all__ = ['backmm']
+__all__ = ['turnRightdegree']
+__all__ = ['turnLeftdegree']
 
 ###############################################################
 ###############################################################
@@ -54,9 +61,9 @@ __all__ = ['readData']
 
 
 
-# init serial port, baud rate = 921600
-port = serial.Serial('/dev/ttyAMA0', 921600)
-
+# init serial port, baud rate = 230400
+port = serial.Serial('/dev/ttyAMA0', 230400)
+time.sleep(0.5)
 
 
 # Read firmware version of the microcontroller
@@ -157,9 +164,10 @@ def controlEnable():
         >> controlEnable()
   """
   global control_robot
-  
+
   if control_robot == False :
     control_robot = True
+    
     writeCommand("CRE")
   else:
     print "error : control is already enable !"
@@ -188,35 +196,84 @@ def forwardC(speed, distance):
   if check_speed(speed,distance) == 0:
     return 0
 	
-  if control_robot == True:
+  #if control_robot == True:
   
-    print "Forward with control enable"
-	
-    distance = int(distance)
-    speed = str(speed)
-    distance = str(distance)
-    port.write("#MFC,")
-    port.write(distance)
-    port.write(",")
-    port.write(speed)
-    port.write("!")
-	
+  print "Forward with control enable"
+
+  distance = int(distance)
+  speed = str(speed)
+  distance = str(distance)
+  port.write("#MFC,")
+  port.write(distance)
+  port.write(",")
+  port.write(speed)
+  port.write("!")
+
+  port.flushInput() # reset serial receive buffer
+
+  while True:
+    time.sleep(0.1)
+    state = 0
     port.flushInput() # reset serial receive buffer
+    writeCommand("TGS,1")
+    state = readData()
+    if((state == '3') or (state == '4')):# state = 3 (end of trapezoid), state = 4 (error trapezoid)
+      if (state == '4'):
+        print "error : speed to hight"
+        return 0
+      chaine = 0
+      return 1# end while 1
+  '''else:
+  print "error : control robot disable"'''
+  
+# the robot move forward with control
+def forwardmm(speed, distance):
+  """
+        move forward mrpiZ with control (mm = millimeter distance) with no pulling
+        Exemple:
+        >> forwardmm(20, 200)
+  """
+  
+  if check_speed(speed,distance*4) == 0:
+    return 0
 	
-    while True:
-      time.sleep(0.1)
-      state = 0
-      port.flushInput() # reset serial receive buffer
-      writeCommand("TGS,1")
-      state = readData()
-      if((state == '3') or (state == '4')):# state = 3 (end of trapezoid), state = 4 (error trapezoid)
-        if (state == '4'):
-          print "error : speed to hight"
-          return 0
-        chaine = 0
-        return 1# end while 1
-  else:
-    print "error : control robot disable"
+  #if control_robot == True:
+  
+  print "Forward with control enable"
+
+  distance = int(distance)
+  speed = str(speed)
+  distance = str(distance*4)#conversion en mm
+  port.write("#MFC,")
+  port.write(distance)
+  port.write(",")
+  port.write(speed)
+  port.write("!")
+
+
+# the robot move forward with control
+def backmm(speed, distance):
+  """
+        move forward mrpi1 with control
+        Exemple:
+        >> forwardC(20, 4000)
+  """
+  
+  if check_speed(speed,distance) == 0:
+    return 0
+	
+  #if control_robot == True:
+  
+  print "Forward with control enable"
+
+  distance = int(distance)
+  speed = str(speed)
+  distance = str(distance)
+  port.write("#MBC,")
+  port.write(distance)
+  port.write(",")
+  port.write(speed)
+  port.write("!")
 
 # the robot move forward with control (distance : millimeter)
 def forward_mm(speed, distance):
@@ -286,8 +343,6 @@ def stop():
         Exemple:
         >> stop()
   """
-  if control_robot == True :
-    controlDisable()
   writeCommand("STP")
  
 # the robot turn right
@@ -307,7 +362,61 @@ def turnRight(speed):
     port.write("!")
   else:
     print("error speed value")
+
+
+
+# the robot turn right with control
+def turnRightDegree(speed, distance):
+  """
+        turn right with control
+        parameter 1 : speed (0 to 100)
+        max speed = 100
+        min speed = 0
+        parameter 2 : degree angle
+        546 = 90 degree 
+        Exemple:
+        >> turnRightC(10, 546)
+  """
+  if check_speed(speed,distance) == 0:
+    return 0
 	
+  distance = int(distance)
+  speed = str(speed)
+  distance = str(distance)
+  port.write("#TRC,")
+  port.write(distance)
+  port.write(",")
+  port.write(speed)
+  port.write("!")
+  
+  port.flushInput() # reset serial receive buffer
+
+# the robot turn right with control
+def turnLeftDegree(speed, distance):
+  """
+        turn right with control
+        parameter 1 : speed (0 to 100)
+        max speed = 100
+        min speed = 0
+        parameter 2 : degree angle
+        546 = 90 degree 
+        Exemple:
+        >> turnRightC(10, 546)
+  """
+  if check_speed(speed,distance) == 0:
+    return 0
+	
+  distance = int(distance)
+  speed = str(speed)
+  distance = str(distance)
+  port.write("#TLC,")
+  port.write(distance)
+  port.write(",")
+  port.write(speed)
+  port.write("!")
+  
+  port.flushInput() # reset serial receive buffer
+
 '''
 def turnRight(speed):
   __turnRightControl(speed,99999)
@@ -348,7 +457,6 @@ def turnRightC(speed, distance):
         print "error : speed to hight"
       chaine = 0
       break # end while 1 
-  print("Turn right ok!")
 	  
 # the robot turn right with control 
 def turnRight_degree(speed, degree):
@@ -449,6 +557,35 @@ def motorLeft(direction, speed):
   port.write(pwm)
   port.write("!")
   
+# the motor left
+def motorsWrite(dirMotorRight, dirMotorLeft, speedMotorRight, speedMotorLeft):
+  """
+        motor left and right control
+        parameter 1 : direction right motor (0 : forward or 1 : back)
+        parameter 2 : direction right motor (0 : forward or 1 : back)
+        parameter 3 : speed right motor (0 to 100)
+        parameter 4 : speed left motor (0 to 100)
+        Exemple:
+        >> motorsWrite(1,0,50,40)
+  """
+  if dirMotorRight == 1:
+    speedRight = speedMotorRight + 100
+  else:
+    speedRight = speedMotorRight
+
+  if dirMotorLeft == 1:
+    speedLeft = speedMotorLeft + 100
+  else:
+    speedLeft = speedMotorLeft
+
+  speedLeft = str(speedLeft)
+  speedRight = str(speedRight)
+  port.write("#MOTS,")
+  port.write(speedRight)
+  port.write(",")
+  port.write(speedLeft)
+  port.write("!")
+
   
 ########################################
 # robot go (X and Y Coordinate),
@@ -538,7 +675,7 @@ def robotPositionO():
   writeCommand("POO")
   value = readData()
   value = __convListToFloat(value) 
-  return (value) 
+  return ((value*180)/(3.14159))
   
 
 #---------------------------------------------------------------------
@@ -570,7 +707,32 @@ def encoderRight():
   port.flushInput() # reset serial receive buffer
   writeCommand("EDR")
   value = readData()
-  return __convListToUint(value)  
+  return __convListToUint(value)
+  
+# get usb tension
+def readVusb():
+  """
+        Read usb tension
+        return tension (volt)
+        Exemple:
+        >> readVusb()
+  """
+  liste = []
+  value = 0
+  port.flushInput() # reset serial receive buffer
+  writeCommand("VUSB")
+  value = readData()
+  return __convListToFloat(value) 
+  
+# reset microcontroller
+def resetUc():
+  """
+        Reset microcontroller
+        Exemple:
+        >> resetUc()
+  """
+  writeCommand("RST")
+
   
 #---------------------------------------------------------------------
 #-------------[ MRPI1 serial2 methods]----------------------------
@@ -727,6 +889,8 @@ def __turnRightControl(speed, angle):
 
 # control robot (postion/orientation disable)
 control_robot = False
-controlDisable()
+
+# reset Uc
+resetUc()
  
 # end file
