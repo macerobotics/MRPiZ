@@ -1,6 +1,7 @@
 import time
 import numpy as np
 import cv2
+import keyboard
 
 WIDTH = 640
 HEIGHT = 480
@@ -50,8 +51,6 @@ while(True):
         else:
             print("I don't see the line")
 
-        #Display the resulting frame
-        cv2.imwrite('image.jpg', crop_img)
 
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+        #cv2.imwrite('image.jpg', crop_img)
+
