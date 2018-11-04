@@ -1,24 +1,21 @@
 import time
-import picamera
 import numpy as np
 import cv2
 
 WIDTH = 640
 HEIGHT = 480
-camera = picamera.PiCamera()
-camera.resolution = (WIDTH, HEIGHT)
-camera.framerate = 12
-time.sleep(2)
+
+video_capture = cv2.VideoCapture(0)
+video_capture.set(3, WIDTH)
+video_capture.set(4, HEIGHT)
 
 while(True):
     # Capture the frames
-    image = np.empty((WIDTH * HEIGHT *3,), dtype=np.uint8)
-    camera.capture(image, 'bgr')
-    image = image.reshape((480, 640, 3))
+    ret, frame = video_capture.read()
 
     # Crop the image
-    #crop_img = image[60:120, 0:160]
-    crop_img = image
+    #crop_img = frame[60:120, 0:160]
+    crop_img = frame
 
     # Convert to grayscale
     gray = cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
