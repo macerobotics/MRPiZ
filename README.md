@@ -12,6 +12,8 @@ The repository is organised as follows:
 
 # Generating the documentation
 
+The documentation is made using the [Sphinx tool](http://www.sphinx-dox.org).
+
 To generate the documentation go to the doc/fr directory, then run:
 
 > make html
