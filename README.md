@@ -12,6 +12,11 @@ The repository is organised as follows:
 
 # Generating the documentation
 
+The documentation is made using the [Sphinx tool](http://www.sphinx-dox.org) and the read the doc theme:
+
+> sudo apt install python3-sphinx
+> sudo pip3 install sphinx\_rtd\_theme
+
 To generate the documentation go to the doc/fr directory, then run:
 
 > make html
