@@ -6,5 +6,5 @@ Tutorials
    :maxdepth: 2
    :caption: Contents:
 
-   line_follower
+   line_follower/index
 
