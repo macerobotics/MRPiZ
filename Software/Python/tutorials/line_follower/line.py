@@ -1,7 +1,5 @@
-import time
 import numpy as np
 import cv2
-import keyboard
 import sys
 from mrpiZ_lib import *
 
