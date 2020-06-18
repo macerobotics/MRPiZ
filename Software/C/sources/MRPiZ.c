@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    MRPiZ.c
   * @author  Mace Robotic - www.macerobotics.com
-  * @version V1.0
-  * @date    17/01/2018
+  * @version V1.1
+  * @date    18/06/2020
   * @brief
   *
  *******************************************************************************/
@@ -26,7 +26,7 @@ int uart_file;
 **********************************************************/
 int init(void)
 {
-struct termios serial;
+struct termios serial, options;
 
   uart_file = open("/dev/ttyAMA0", O_RDWR | O_NOCTTY | O_NDELAY);
 
@@ -36,11 +36,13 @@ struct termios serial;
     return -1;
   }
 
-  // Set up Serial Configuration
-  serial.c_cflag = B240300 | CS8 | CREAD;
-  
-  // Apply configuration
-  tcsetattr(uart_file, TCSANOW, &serial); 
+  tcgetattr(uart_file, &options);
+  options.c_cflag = B230400 | CS8 | CLOCAL | CREAD;		//<Set baud rate
+  options.c_iflag = IGNPAR;
+  options.c_oflag = 0;
+  options.c_lflag = 0;
+  tcflush(uart_file, TCIFLUSH);
+  tcsetattr(uart_file, TCSANOW, &options);
   
   // control disable
   controlDisable();
