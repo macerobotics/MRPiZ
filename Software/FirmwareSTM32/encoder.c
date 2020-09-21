@@ -2,9 +2,12 @@
   ******************************************************************************
   * @file    Encoder.c
   * @author  Mace Robotics
-  * @version V1.0
-  * @date    5/11/2015
+  * @version V1.1
+  * @date    21/09/2020
   * @brief
+  *
+  * Modification du 21/09/20 : ajouter TIM_AUTORELOAD_PRELOAD_DISABLE;
+  *
   *
  *******************************************************************************/
 #include <stdbool.h>
@@ -148,7 +151,7 @@ static int32_t EncoderVirtual(struct_Encoder *Encoder)
 {
 int16_t Difference = 0;
 
-  // Calcul de la différence par rapport à l'ancienne valeur.
+  // Calcul de la diffÃ©rence par rapport Ã  l'ancienne valeur.
   if(Encoder->oldTimer < Encoder->currentTimer)
   {
     Difference = Encoder->currentTimer - Encoder->oldTimer;
@@ -187,6 +190,7 @@ TIM_Encoder_InitTypeDef t1Encod_initStruct;
   timer1_initStruct.Init.CounterMode = TIM_COUNTERMODE_UP;
   timer1_initStruct.Init.Period = 0xFFFF;
   timer1_initStruct.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  timer1_initStruct.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
 
   t1Encod_initStruct.EncoderMode = TIM_ENCODERMODE_TI12;
 
@@ -230,6 +234,7 @@ TIM_Encoder_InitTypeDef t8Encod_initStruct;
   timer8_initStruct.Init.CounterMode = TIM_COUNTERMODE_UP;
   timer8_initStruct.Init.Period = 0xFFFF;
   timer8_initStruct.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  timer8_initStruct.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
 
   t8Encod_initStruct.EncoderMode = TIM_ENCODERMODE_TI12;
 
