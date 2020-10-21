@@ -4,8 +4,10 @@
 #  Python API
 #  This library is used for the MRPiZ robot.
 #  http://www.macerobotics.com
-#  Date : 25/04/2018
-#  Version : 0.3.1
+#  Date : 12/10/2020
+#  Version : 1.2.2
+# 
+#  Modif : suppression controleEnable, gerer direct dans lib
 #
 #  MIT Licence
 
@@ -52,9 +54,18 @@ __all__ = ['writeCommand']
 __all__ = ['readData']
 __all__ = ['forwardmm']
 __all__ = ['backmm']
-__all__ = ['turnRightdegree']
-__all__ = ['turnLeftdegree']
-
+__all__ = ['turnRightDegree']
+__all__ = ['turnLeftDegree']
+__all__ = ['robotGo']
+__all__ = ['motorLeftSpeed']
+__all__ = ['motorRightSpeed']
+__all__ = ['motorsDisable']
+__all__ = ['motorsEnable']
+__all__ = ['init_gripper']
+__all__ = ['buzzer']
+__all__ = ['buzzerStart']
+__all__ = ['buzzerStop']
+__all__ = ['ledRGB']
 ###############################################################
 ###############################################################
 
@@ -83,7 +94,7 @@ def firmwareVersion():
 #---------------------------------------------------------------------
 #-------------[ MRPI1 switch methods]---------------------------------
   
-# Read switch
+# Read switch 
 def switch():
   """
         Read the switch state
@@ -101,7 +112,7 @@ def switch():
 #---------------------------------------------------------------------
 #-------------[ MRPI1 class sensors methods]--------------------------
 
-# get battery tension
+# get battery tension (volt unit)
 def battery():
   """
         Read battery tension
@@ -120,9 +131,9 @@ def battery():
 def proxSensor(sensor):
   """
         Read proximity sensor
-        parameter : 0 to 5
-        return proximity sensor (0 to 2000)
-        Exemple:
+        parameter : 1 to 5
+        return proximity sensor (0 to 2000), millimeter unit
+        Exemple, read sensor 2:
         >> proxSensor(2)
   """
   if( sensor not in(1,2,3,4,5) ) :
@@ -164,10 +175,8 @@ def controlEnable():
         >> controlEnable()
   """
   global control_robot
-
   if control_robot == False :
     control_robot = True
-    
     writeCommand("CRE")
   else:
     print "error : control is already enable !"
@@ -192,13 +201,10 @@ def forwardC(speed, distance):
         Exemple:
         >> forwardC(20, 4000)
   """
-  
   if check_speed(speed,distance) == 0:
     return 0
 	
   #if control_robot == True:
-  
-  print "Forward with control enable"
 
   distance = int(distance)
   speed = str(speed)
@@ -233,7 +239,7 @@ def forwardmm(speed, distance):
         Exemple:
         >> forwardmm(20, 200)
   """
-  
+  controlEnable()
   if check_speed(speed,distance*4) == 0:
     return 0
 	
@@ -258,7 +264,7 @@ def backmm(speed, distance):
         Exemple:
         >> forwardC(20, 4000)
   """
-  
+  controlEnable()
   if check_speed(speed,distance) == 0:
     return 0
 	
@@ -277,6 +283,7 @@ def backmm(speed, distance):
 
 # the robot move forward with control (distance : millimeter)
 def forward_mm(speed, distance):
+  controlEnable()
   forwardC(speed, distance*4)
 
 # the robot move back
@@ -334,6 +341,7 @@ def backC(speed, distance):
 	  
 # the robot move back with control (distance : millimeter)
 def back_mm(speed, distance):
+  controlEnable()
   backC(speed, distance*4)
 
 # the robot stop
@@ -377,6 +385,7 @@ def turnRightDegree(speed, distance):
         Exemple:
         >> turnRightC(10, 546)
   """
+  controlEnable()
   if check_speed(speed,distance) == 0:
     return 0
 	
@@ -403,6 +412,7 @@ def turnLeftDegree(speed, distance):
         Exemple:
         >> turnRightC(10, 546)
   """
+  controlEnable()
   if check_speed(speed,distance) == 0:
     return 0
 	
@@ -460,6 +470,7 @@ def turnRightC(speed, distance):
 	  
 # the robot turn right with control 
 def turnRight_degree(speed, degree):
+  controlEnable()
   turnRightC(speed, degree*546/90)
 
 # the robot turn left
@@ -479,10 +490,8 @@ def turnLeft(speed):
     port.write("!")
   else:
     print("error speed value")
-'''
-def turnLeft(speed):
-  __turnLeftControl(speed, 99999)
-'''  
+
+
 # the robot turn left with control
 def turnLeftC(speed, distance):
   """
@@ -521,7 +530,64 @@ def turnLeftC(speed, distance):
 	  
 # the robot turn right with control 
 def turnLeft_degree(speed, degree):
+  controlEnable()
   turnLeftC(speed, degree*546/90)
+  
+# the robot turn with control (0 to 360 degree) 
+def turn_degree(speed, degree):
+  #lecture angle actuelle du robot
+  angle_robot = robotPositionO() 
+  print "angle_robot = ", angle_robot
+  
+  if (degree == 0.0)and(angle_robot > 180):
+    print "degree == 0)and(angle_robot > 180"
+    degree = 360
+  elif (angle_robot == 0.0)and(degree > 180) :
+    print "angle_robot == 0.0)and(degree > 180"
+    angle_robot = 360
+  
+  
+  if degree > angle_robot:
+    error = degree - angle_robot
+    if error <= 180:
+      turnLeft_degree(speed, error)
+    else:
+      error = 360 - error
+      turnRight_degree(speed, error)
+  else:
+    error = angle_robot - degree
+    if error <= 180:
+      turnRight_degree(speed, error)
+    else:
+      error = 360 - error
+      turnLeft_degree(speed, error)
+
+
+# the robot turn right with control 
+def turnLeftDegree(speed, degree):
+  """
+        turn left with control
+        parameter 1 : speed (0 to 100)
+        max speed = 100
+        min speed = 0
+        parameter 2 : degree angle
+        546 = 90 degree
+        Exemple:
+        >> turnLeftC(10, 546)
+  """
+  controlEnable()
+  if check_speed(speed,degree) == 0:
+    return 0
+	
+  degree = int(degree*6)
+  speed = str(speed)
+  degree = str(degree)
+  port.write("#TLC,")
+  port.write(degree)
+  port.write(",")
+  port.write(speed)
+  port.write("!")
+  
   
 # the motor right
 def motorRight(direction, speed):
@@ -592,41 +658,29 @@ def motorsWrite(dirMotorRight, dirMotorLeft, speedMotorRight, speedMotorLeft):
 # speed : speed of the robot (0 to 100)
 # cordX : Coordinate axe X (millimeter)
 # cordY : Coordinate axe Y (millimeter)
-'''
-def robotGo(speed, cordX, cordY):
 
-  # 
-  if(speed <= 0):
-    print("error speed value")
-    return 0
+def robotGo(MaxSpeed, cordX, cordY):
+  posX = robotPositionX()
+  posY = robotPositionY()
+  posA = robotPositionOrientation()
+  
+  # calcul de la distance a parcourir
+  consigneDistance = sqrt( pow(cordX-posX,2)+pow(cordY-posY,2) )
+  
+  # calcul de l'orientation de consigne du robot
+  consigneOrientation = atan2( coord_Y-posY, coord_X-posX)
+  
+  # calcul erreur en distance
+  erreurDistance = consigneDistance;
+  if(erreurDistance > ERR_DIS_SAT):
+    erreurDistance = ERR_DIS_SAT
 
-  hypotenuse = cordX*cordX + cordY*cordY
-  hypotenuse = sqrt(hypotenuse)
-  angle = cordX/hypotenuse
-  angle = acos(angle)
-  angle = (angle*360)/(2*pi)
-  
-  if(cordY < 0):
-    angle = -angle
-	
-  # angle negatif
-  if(angle < 0):
-    angle = angle + 360
-  
-  
-  print(hypotenuse)
-  print(angle)
-  
-  if check_speed(speed,hypotenuse*4) == 0:
-    return 0
-	
-  if check_speed(speed,angle*546/90) == 0:
-    return 0
-	
-  turnRight_degree(speed, angle)
-  time.sleep(0.1)
-  forward_mm(speed, hypotenuse)
-'''
+  # calcul erreur en orientation
+  erreurOrientation = consigneOrientation - posA;
+  if(erreurOrientation > M_PI):
+    erreurOrientation -= M_2PI
+  if(erreurOrientation < -M_PI):
+   erreurOrientation += M_2PI
   
 # read robot position axe X
 def robotPositionX():
@@ -661,11 +715,11 @@ def robotPositionY():
   value = __convListToFloat(value) 
   return (value/4) 
   
-  # read robot orientation
+# read robot orientation
 def robotPositionO():
   """
         Read robot orientation
-        return orientation 
+        return degree orientation 
         Exemple:
         >> robotPositionO()
   """
@@ -675,11 +729,94 @@ def robotPositionO():
   writeCommand("POO")
   value = readData()
   value = __convListToFloat(value) 
-  return ((value*180)/(3.14159))
   
+  # conversion en degree
+  value = ((value*180.0)/(3.14159))
+  
+  # conversion entre 0 et 360 degree
+  if abs(value) >= 360.0:
+    m = int(value/360)
+    modulo = value%360
+    value = modulo
+  elif value < 0.0:
+    value = 360 + value
+
+  return value# conv to degree
+  
+# read robot orientation
+def motorLeftSpeed():
+  liste = []
+  value = 0
+  port.flushInput() # reset serial receive buffer
+  writeCommand("MLS")
+  value = readData()
+  value = __convListToFloat(value) 
+  return (value)
+  
+# read robot orientation
+def motorRightSpeed():
+  liste = []
+  value = 0
+  port.flushInput() # reset serial receive buffer
+  writeCommand("MRS")
+  value = readData()
+  value = __convListToFloat(value) 
+  return (value)
+  
+  
+# motors disable
+def motorsDisable():
+  writeCommand("MDI")
+  
+# motors enable
+def motorsEnable():
+  writeCommand("MEN")
+  
+# init gripper of MRPiZ
+def init_gripper():
+  print("init gripper")
 
 #---------------------------------------------------------------------
-#-------------[ MRPI1 encoders robot methods]-------------------------
+#-------------[ MRPiZ buzzer methods]-------------------------
+
+# buzzer control
+def buzzer(frequency):
+  """
+        buzzer control
+        parameter : 0 to 20000 Hz
+        Exemple:
+        >> buzzer(200)
+  """
+  if frequency > -1 and frequency < 20001:
+    frequency = str(frequency)
+    port.write("#BUZ,")
+    port.write(frequency)
+    port.write("!")
+  else:
+    print("error frequency value")
+
+# buzzer start
+def buzzerStart():
+  writeCommand("BUZD")
+  
+# buzzer stop
+def buzzerStop():
+  writeCommand("BUZS")
+  
+# led RGB
+def ledRGB(red,green,blue):
+  red = str(red)
+  green = str(green)
+  blue = str(blue)
+  port.write("#RGB,")
+  port.write(red)
+  port.write(",")
+  port.write(green)
+  port.write(",")
+  port.write(blue)
+  port.write("!")
+#---------------------------------------------------------------------
+#-------------[ MRPiZ encoders robot methods]-------------------------
 
 # the encoderleft
 def encoderLeft():
@@ -708,7 +845,10 @@ def encoderRight():
   writeCommand("EDR")
   value = readData()
   return __convListToUint(value)
-  
+ 
+#---------------------------------------------------------------------
+#-------------[ MRPiZ usb robot methods]------------------------------
+
 # get usb tension
 def readVusb():
   """
@@ -723,7 +863,10 @@ def readVusb():
   writeCommand("VUSB")
   value = readData()
   return __convListToFloat(value) 
-  
+ 
+#---------------------------------------------------------------------
+#-------------[ MRPiZ reset uc robot methods]------------------------------
+
 # reset microcontroller
 def resetUc():
   """
@@ -732,12 +875,13 @@ def resetUc():
         >> resetUc()
   """
   writeCommand("RST")
+  control_robot = False
 
   
 #---------------------------------------------------------------------
-#-------------[ MRPI1 serial2 methods]----------------------------
+#-------------[ MRPiZ serial2 methods]----------------------------
   
-# play  text file, exemple : playFileTxt("Hello.txt")
+# 
 def serial2Write(data):
   """
         serial 2 write 
@@ -750,7 +894,7 @@ def serial2Write(data):
   
 
 #------------------------------------------------------------
-#-------------[ MRPI1 class utils private methods]------------
+#-------------[ MRPiZ class utils private methods]------------
 
 # check 
 def check_speed(speed, distance):
