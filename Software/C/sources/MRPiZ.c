@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    MRPiZ.c
   * @author  Mace Robotic - www.macerobotics.com
-  * @version V1.1
-  * @date    18/06/2020
+  * @version V1.2
+  * @date    15/10/2020
   * @brief
   *
  *******************************************************************************/
@@ -11,6 +11,7 @@
 
 
 static void writeCommand2parm(char *cmd, unsigned int param1, int param2);
+static void writeCommand3parm(char *cmd, unsigned int param1, int param2, int param3);
 static void writeCommand1parm(char *cmd, unsigned int param1);
 static void writeCommand(char *cmd);
 static int readInt(void);
@@ -46,6 +47,8 @@ struct termios serial, options;
   
   // control disable
   controlDisable();
+  
+  stop();
 
 }
 
@@ -550,6 +553,42 @@ float orientation=0;
 }
 
 
+/**********************************************************
+ * @brief  buzzer
+ * @param  None
+ * @retval  
+**********************************************************/
+void buzzer(unsigned int frequency)
+{
+  // Send the command
+  writeCommand1parm("BUZ", frequency);
+ 
+}
+
+
+/**********************************************************
+ * @brief  buzzerStop
+ * @param  None
+ * @retval  
+**********************************************************/
+void buzzerStop(void)
+{
+  // Send the command
+  writeCommand("BUZS");	
+}
+
+
+/**********************************************************
+ * @brief  ledRGB
+ * @param  None
+ * @retval  
+**********************************************************/
+void ledRGB(unsigned int red,unsigned int green, unsigned int blue )
+{
+  writeCommand3parm("RGB", red, green, blue);
+}
+
+
 /*********************************************************************************************************/
 /*********************************************************************************************************/
 /*********************************************************************************************************
@@ -623,6 +662,38 @@ char str[100];
   write(uart_file, str, strlen(str));  
 }
 
+
+/**********************************************************
+ * @brief  write command with 3 parameters
+ * @param  Command , parameter 1, parameter 2, parameter 3
+ * @retval None
+**********************************************************/
+static void writeCommand3parm(char *cmd, unsigned int param1, int param2, int param3)
+{
+char str[100];
+char s_param1[100];
+char s_param2[100];
+char s_param3[100];
+
+  // Conv int to char
+  sprintf (s_param1, "%d", param1);
+  sprintf (s_param2, "%d", param2);
+  sprintf (s_param3, "%d", param3);
+
+  
+  strcpy(str, "#");
+  strcat(str, cmd);
+  strcat(str,",");
+  strcat(str, s_param1);
+  strcat(str,",");
+  strcat(str, s_param2);
+  strcat(str,",");
+  strcat(str, s_param3);
+  strcat(str,"!");
+  
+  write(uart_file, str, strlen(str));
+  
+}
 
 /**********************************************************
  * @brief  read data type int
