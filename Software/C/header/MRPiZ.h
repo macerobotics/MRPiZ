@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    MRPiZ.h
   * @author  Mace Robotic - www.macerobotics.com
-  * @version V1.0
-  * @date    17/01/2018
+  * @version V1.2
+  * @date    15/10/2020
   * @brief	
   *
  *******************************************************************************/
@@ -78,6 +78,13 @@ float robotPositionY();
 
 // read robot orientation
 float robotPositionO();
+
+// buzzer
+void buzzer(unsigned int frequency);
+void buzzerStop(void);
+
+// led rgb
+void ledRGB(unsigned int red,unsigned int green, unsigned int blue );
 
 #endif
 // End Of File
