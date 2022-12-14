@@ -4,10 +4,11 @@
 #  Python API
 #  This library is used for the MRPiZ robot.
 #  http://www.macerobotics.com
-#  Date : 12/10/2020
-#  Version : 1.2.2
+#  Date : 14/12/2022
+#  Version : 1.6
 # 
 #  Modif : suppression controleEnable, gerer direct dans lib
+#  Fonctionnne avec Python 3
 #
 #  MIT Licence
 
@@ -21,44 +22,44 @@ import os
 ###############################################################
 ###############################################################
 
-__all__ = ['firmwareVersion']
-__all__ = ['switch']
-__all__ = ['battery']
-__all__ = ['proxSensor']
-__all__ = ['forward']
-__all__ = ['controlEnable']
-__all__ = ['controlDisable']
-__all__ = ['forwardC']
-__all__ = ['back']
-__all__ = ['backC']
-__all__ = ['stop']
-__all__ = ['turnRight']
-__all__ = ['turnRightC']
-__all__ = ['turnLeft']
-__all__ = ['turnLeftC']
-__all__ = ['turnRight_degree']
-__all__ = ['turnLeft_degree']
-__all__ = ['forward_mm']
-__all__ = ['back_mm']
-__all__ = ['motorRight']
-__all__ = ['motorLeft']
-__all__ = ['motorsWrite']
-__all__ = ['robotPositionX']
-__all__ = ['robotPositionY']
-__all__ = ['robotPositionO']
-__all__ = ['encoderLeft']
-__all__ = ['encoderRight']
-__all__ = ['readVusb']
-__all__ = ['resetUc']
-__all__ = ['writeCommand']
-__all__ = ['readData']
-__all__ = ['forwardmm']
-__all__ = ['backmm']
-__all__ = ['turnRightDegree']
-__all__ = ['turnLeftDegree']
-__all__ = ['robotGo']
-__all__ = ['motorLeftSpeed']
-__all__ = ['motorRightSpeed']
+__all__ = ['firmwareVersion'] # OK
+__all__ = ['switch']# OK
+__all__ = ['battery']# OK
+__all__ = ['proxSensor']# OK
+__all__ = ['forward']# OK
+__all__ = ['controlEnable']# OK
+__all__ = ['controlDisable']# OK
+__all__ = ['forwardC']# OK
+__all__ = ['back']# OK
+__all__ = ['backC']# OK
+__all__ = ['stop']# OK
+__all__ = ['turnRight']# OK
+__all__ = ['turnRightC']# OK
+__all__ = ['turnLeft']# OK
+__all__ = ['turnLeftC']# OK
+__all__ = ['turnRight_degree']# OK
+__all__ = ['turnLeft_degree']# OK
+__all__ = ['forward_mm']# OK
+__all__ = ['back_mm']# OK
+__all__ = ['motorRight']# OK
+__all__ = ['motorLeft']# OK
+__all__ = ['motorsWrite']# OK
+__all__ = ['robotPositionX']# OK
+__all__ = ['robotPositionY']# OK
+__all__ = ['robotPositionO']# OK
+__all__ = ['encoderLeft']# OK
+__all__ = ['encoderRight']# OK
+__all__ = ['readVusb']# OK
+__all__ = ['resetUc']# OK
+__all__ = ['robotGo']# OK
+__all__ = ['writeCommand']# OK
+__all__ = ['readData']# OK
+__all__ = ['forwardmm']# OK
+__all__ = ['backmm']# OK
+__all__ = ['turnRightDegree']# OK
+__all__ = ['turnLeftDegree']# OK
+__all__ = ['motorLeftSpeed']# OK
+__all__ = ['motorRightSpeed']# OK
 __all__ = ['motorsDisable']
 __all__ = ['motorsEnable']
 __all__ = ['init_gripper']
@@ -87,10 +88,13 @@ def firmwareVersion():
   liste = []
   value = 0
   port.flushInput() # reset serial receive buffer
-  writeCommand("FV")
+  writeCommand(b"FV")
   value = readData()
-  return __convListToFloat(value)
+  return float(value)
   
+ 
+def robotGo():
+  print("En cours de dévelopement")
 #---------------------------------------------------------------------
 #-------------[ MRPI1 switch methods]---------------------------------
   
@@ -105,7 +109,7 @@ def switch():
   liste = []
   value = 0
   port.flushInput() # reset serial receive buffer
-  writeCommand("SW")
+  writeCommand(b"SW")
   value = readData()
   return __convListToUint(value)
   
@@ -123,9 +127,9 @@ def battery():
   liste = []
   value = 0
   port.flushInput() # reset serial receive buffer
-  writeCommand("BAT")
+  writeCommand(b"BAT")
   value = readData()
-  return __convListToFloat(value) 
+  return float(value)
   
 # read proximity sensor
 def proxSensor(sensor):
@@ -142,11 +146,12 @@ def proxSensor(sensor):
     liste = []
     value = 0
     port.flushInput() # reset serial receive buffer
-    port.write("#PROX,")
-    port.write( str(sensor) )
-    port.write("!")
+    port.write(b"#PROX,")
+    sensor = bytes(str(sensor), 'utf-8')
+    port.write(sensor)
+    port.write(b"!")
     value = readData()
-    return __convListToUint(value)
+    return int(value)
   
 #---------------------------------------------------------------------
 #-------------[ MRPI1 move robot methods]------------
@@ -161,9 +166,10 @@ def forward(speed):
   """
   if speed > -1 and speed < 101:
     speed = str(speed)
-    port.write("#MF,")
+    port.write(b"#MF,")
+    speed = bytes(speed, 'utf-8')
     port.write(speed)
-    port.write("!")
+    port.write(b"!")
   else:
     print("error speed value")
 
@@ -177,9 +183,9 @@ def controlEnable():
   global control_robot
   if control_robot == False :
     control_robot = True
-    writeCommand("CRE")
+    writeCommand(b"CRE")
   else:
-    print "error : control is already enable !"
+    print("error : control is already enable !")
 
 # control robot disable  
 def controlDisable():
@@ -192,7 +198,7 @@ def controlDisable():
   
   if (control_robot == True) or  (control_robot == False):
     control_robot = False
-    writeCommand("CRD")
+    writeCommand(b"CRD")
 
 # the robot move forward with control
 def forwardC(speed, distance):
@@ -201,6 +207,9 @@ def forwardC(speed, distance):
         Exemple:
         >> forwardC(20, 4000)
   """
+  speed = float(speed)
+  distance = float(distance)
+  
   if check_speed(speed,distance) == 0:
     return 0
 	
@@ -209,11 +218,13 @@ def forwardC(speed, distance):
   distance = int(distance)
   speed = str(speed)
   distance = str(distance)
-  port.write("#MFC,")
+  distance = bytes(distance, 'utf-8')
+  speed = bytes(speed, 'utf-8')
+  port.write(b"#MFC,")
   port.write(distance)
-  port.write(",")
+  port.write(b",")
   port.write(speed)
-  port.write("!")
+  port.write(b"!")
 
   port.flushInput() # reset serial receive buffer
 
@@ -221,16 +232,16 @@ def forwardC(speed, distance):
     time.sleep(0.1)
     state = 0
     port.flushInput() # reset serial receive buffer
-    writeCommand("TGS,1")
+    writeCommand(b"TGS,1")
     state = readData()
-    if((state == '3') or (state == '4')):# state = 3 (end of trapezoid), state = 4 (error trapezoid)
-      if (state == '4'):
-        print "error : speed to hight"
+    state = int(state)
+    if((state == 3) or (state == 4)):# state = 3 (end of trapezoid), state = 4 (error trapezoid)
+      if (state == 4):
+        print("error : speed to hight")
         return 0
       chaine = 0
       return 1# end while 1
-  '''else:
-  print "error : control robot disable"'''
+
   
 # the robot move forward with control
 def forwardmm(speed, distance):
@@ -245,16 +256,18 @@ def forwardmm(speed, distance):
 	
   #if control_robot == True:
   
-  print "Forward with control enable"
+  print("Forward with control enable")
 
   distance = int(distance)
   speed = str(speed)
   distance = str(distance*4)#conversion en mm
-  port.write("#MFC,")
+  port.write(b"#MFC,")
+  distance = bytes(distance, 'utf-8')
   port.write(distance)
-  port.write(",")
+  port.write(b",")
+  speed = bytes(speed, 'utf-8')
   port.write(speed)
-  port.write("!")
+  port.write(b"!")
 
 
 # the robot move forward with control
@@ -265,26 +278,30 @@ def backmm(speed, distance):
         >> forwardC(20, 4000)
   """
   controlEnable()
-  if check_speed(speed,distance) == 0:
+  if check_speed(speed,distance*4) == 0:
     return 0
 	
   #if control_robot == True:
   
-  print "Forward with control enable"
+  print("Forward with control enable")
 
   distance = int(distance)
   speed = str(speed)
-  distance = str(distance)
-  port.write("#MBC,")
+  distance = str(distance*4)#conversion en mm
+  port.write(b"#MBC,")
+  distance = bytes(distance, 'utf-8')
   port.write(distance)
-  port.write(",")
+  port.write(b",")
+  speed = bytes(speed, 'utf-8')
   port.write(speed)
-  port.write("!")
+  port.write(b"!")
 
 # the robot move forward with control (distance : millimeter)
 def forward_mm(speed, distance):
   controlEnable()
-  forwardC(speed, distance*4)
+  speed = str(speed)
+  distance = str(distance*4) 
+  forwardC(speed, distance)
 
 # the robot move back
 def back(speed):
@@ -296,9 +313,10 @@ def back(speed):
   """
   if speed > -1 and speed < 101:
     speed = str(speed)
-    port.write("#MB,")
+    port.write(b"#MB,")
+    speed = bytes(speed, 'utf-8')
     port.write(speed)
-    port.write("!")
+    port.write(b"!")
   else:
     print("error speed value")
 	
@@ -314,28 +332,33 @@ def backC(speed, distance):
         Exemple:
         >> backC(20, 4000)
   """
+  speed = float(speed)
+  distance = float(distance)
+  
   if check_speed(speed,distance) == 0:
     return 0
 	
   distance = int(distance)
   speed = str(speed)
   distance = str(distance)
-  port.write("#MBC,")
+  distance = bytes(distance, 'utf-8')
+  speed = bytes(speed, 'utf-8')
+  port.write(b"#MBC,")
   port.write(distance)
-  port.write(",")
+  port.write(b",")
   port.write(speed)
-  port.write("!")
-  print "move back with control"
+  port.write(b"!")
   
   port.flushInput() # reset serial receive buffer
   
   while True:
     time.sleep(0.1)
-    writeCommand("TGS,1")
+    writeCommand(b"TGS,1")
     state = readData()
-    if((state == '3') or (state == '4')):# state = 3 (end of trapezoid), state = 4 (error trapezoid)
-      if (state == '4'):
-        print "error : speed to hight"
+    state = int(state)
+    if((state == 3) or (state == 4)):# state = 3 (end of trapezoid), state = 4 (error trapezoid)
+      if (state == 4):
+        print("error : speed to hight")
       chaine = 0
       break # end while 1 
 	  
@@ -351,7 +374,7 @@ def stop():
         Exemple:
         >> stop()
   """
-  writeCommand("STP")
+  writeCommand(b"STP")
  
 # the robot turn right
 def turnRight(speed):
@@ -365,9 +388,10 @@ def turnRight(speed):
   """
   if speed > -1 and speed < 101:
     speed = str(speed)
-    port.write("#TR,")
+    port.write(b"#TR,")
+    speed = bytes(speed, 'utf-8')
     port.write(speed)
-    port.write("!")
+    port.write(b"!")
   else:
     print("error speed value")
 
@@ -375,62 +399,43 @@ def turnRight(speed):
 
 # the robot turn right with control
 def turnRightDegree(speed, distance):
-  """
-        turn right with control
-        parameter 1 : speed (0 to 100)
-        max speed = 100
-        min speed = 0
-        parameter 2 : degree angle
-        546 = 90 degree 
-        Exemple:
-        >> turnRightC(10, 546)
-  """
+
   controlEnable()
-  if check_speed(speed,distance) == 0:
+  if check_speed(speed,distance*546/90) == 0:
     return 0
 	
-  distance = int(distance)
+  distance = int(distance*546/90)
   speed = str(speed)
   distance = str(distance)
-  port.write("#TRC,")
+  distance = bytes(distance, 'utf-8')
+  speed = bytes(speed, 'utf-8')  
+  port.write(b"#TRC,")
   port.write(distance)
-  port.write(",")
+  port.write(b",")
   port.write(speed)
-  port.write("!")
+  port.write(b"!")
   
   port.flushInput() # reset serial receive buffer
 
 # the robot turn right with control
 def turnLeftDegree(speed, distance):
-  """
-        turn right with control
-        parameter 1 : speed (0 to 100)
-        max speed = 100
-        min speed = 0
-        parameter 2 : degree angle
-        546 = 90 degree 
-        Exemple:
-        >> turnRightC(10, 546)
-  """
   controlEnable()
-  if check_speed(speed,distance) == 0:
+  if check_speed(speed,distance*546/90) == 0:
     return 0
 	
-  distance = int(distance)
+  distance = int(distance*546/90)
   speed = str(speed)
   distance = str(distance)
-  port.write("#TLC,")
+  distance = bytes(distance, 'utf-8')
+  speed = bytes(speed, 'utf-8')  
+  port.write(b"#TLC,")
   port.write(distance)
-  port.write(",")
+  port.write(b",")
   port.write(speed)
-  port.write("!")
+  port.write(b"!")
   
   port.flushInput() # reset serial receive buffer
 
-'''
-def turnRight(speed):
-  __turnRightControl(speed,99999)
-'''  
   
 # the robot turn right with control
 def turnRightC(speed, distance):
@@ -444,27 +449,34 @@ def turnRightC(speed, distance):
         Exemple:
         >> turnRightC(10, 546)
   """
+  
+  speed = float(speed)
+  distance = float(distance)
+  
   if check_speed(speed,distance) == 0:
     return 0
 	
   distance = int(distance)
   speed = str(speed)
   distance = str(distance)
-  port.write("#TRC,")
+  distance = bytes(distance, 'utf-8')
+  speed = bytes(speed, 'utf-8')
+  port.write(b"#TRC,")
   port.write(distance)
-  port.write(",")
+  port.write(b",")
   port.write(speed)
-  port.write("!")
+  port.write(b"!")
   
   port.flushInput() # reset serial receive buffer
 
   while True:
     time.sleep(0.1)
-    writeCommand("TGS,2")
+    writeCommand(b"TGS,2")
     state = readData()
-    if((state == '3') or (state == '4')):# state = 3 (end of trapezoid), state = 4 (error trapezoid)
-      if (state == '4'):
-        print "error : speed to hight"
+    state = int(state)
+    if((state == 3) or (state == 4)):# state = 3 (end of trapezoid), state = 4 (error trapezoid)
+      if (state == 4):
+        print("error : speed to hight")
       chaine = 0
       break # end while 1 
 	  
@@ -485,9 +497,10 @@ def turnLeft(speed):
   """
   if speed > -1 and speed < 101:
     speed = str(speed)
-    port.write("#TL,")
+    port.write(b"#TL,")
+    speed = bytes(speed, 'utf-8')
     port.write(speed)
-    port.write("!")
+    port.write(b"!")
   else:
     print("error speed value")
 
@@ -504,27 +517,33 @@ def turnLeftC(speed, distance):
         Exemple:
         >> turnLeftC(10, 546)
   """
+  speed = float(speed)
+  distance = float(distance)  
+  
   if check_speed(speed,distance) == 0:
     return 0
 	
   distance = int(distance)
   speed = str(speed)
   distance = str(distance)
-  port.write("#TLC,")
+  distance = bytes(distance, 'utf-8')
+  speed = bytes(speed, 'utf-8')
+  port.write(b"#TLC,")
   port.write(distance)
-  port.write(",")
+  port.write(b",")
   port.write(speed)
-  port.write("!")
+  port.write(b"!")
   
   port.flushInput() # reset serial receive buffer
   
   while True:
     time.sleep(0.1)
-    writeCommand("TGS,2")
+    writeCommand(b"TGS,2")
     state = readData()
-    if((state == '3') or (state == '4')):# state = 3 (end of trapezoid), state = 4 (error trapezoid)
-      if (state == '4'):
-        print "error : speed to hight"
+    state = int(state)
+    if((state == 3) or (state == 4)):# state = 3 (end of trapezoid), state = 4 (error trapezoid)
+      if (state == 4):
+        print("error : speed to hight")
       chaine = 0
       break # end while 1 
 	  
@@ -537,13 +556,13 @@ def turnLeft_degree(speed, degree):
 def turn_degree(speed, degree):
   #lecture angle actuelle du robot
   angle_robot = robotPositionO() 
-  print "angle_robot = ", angle_robot
+  print("angle_robot = ", angle_robot)
   
   if (degree == 0.0)and(angle_robot > 180):
-    print "degree == 0)and(angle_robot > 180"
+    print("degree == 0)and(angle_robot > 180")
     degree = 360
   elif (angle_robot == 0.0)and(degree > 180) :
-    print "angle_robot == 0.0)and(degree > 180"
+    print("angle_robot == 0.0)and(degree > 180")
     angle_robot = 360
   
   
@@ -561,32 +580,6 @@ def turn_degree(speed, degree):
     else:
       error = 360 - error
       turnLeft_degree(speed, error)
-
-
-# the robot turn right with control 
-def turnLeftDegree(speed, degree):
-  """
-        turn left with control
-        parameter 1 : speed (0 to 100)
-        max speed = 100
-        min speed = 0
-        parameter 2 : degree angle
-        546 = 90 degree
-        Exemple:
-        >> turnLeftC(10, 546)
-  """
-  controlEnable()
-  if check_speed(speed,degree) == 0:
-    return 0
-	
-  degree = int(degree*6)
-  speed = str(speed)
-  degree = str(degree)
-  port.write("#TLC,")
-  port.write(degree)
-  port.write(",")
-  port.write(speed)
-  port.write("!")
   
   
 # the motor right
@@ -596,15 +589,15 @@ def motorRight(direction, speed):
         parameter 1 : direction (0 or 1)
         parameter 2 : speed ( 0 to 100)     
         Exemple:
-        >> motorRigh(1, 50)
+        >> motorRight(1, 50)
   """
-  dir = str(direction)
-  pwm = str(speed)
-  port.write("#MOTR,")
+  dir = bytes(str(direction), 'utf-8')
+  pwm = bytes(str(speed), 'utf-8')
+  port.write(b"#MOTR,")
   port.write(dir)
-  port.write(",")
+  port.write(b",")
   port.write(pwm)
-  port.write("!")
+  port.write(b"!")
 
 # the motor left
 def motorLeft(direction, speed):
@@ -615,13 +608,13 @@ def motorLeft(direction, speed):
         Exemple:
         >> motorLeft(1, 50)
   """
-  dir = str(direction)
-  pwm = str(speed)
-  port.write("#MOTL,")
+  dir = bytes(str(direction), 'utf-8')
+  pwm = bytes(str(speed), 'utf-8')
+  port.write(b"#MOTL,")
   port.write(dir)
-  port.write(",")
+  port.write(b",")
   port.write(pwm)
-  port.write("!")
+  port.write(b"!")
   
 # the motor left
 def motorsWrite(dirMotorRight, dirMotorLeft, speedMotorRight, speedMotorLeft):
@@ -646,11 +639,13 @@ def motorsWrite(dirMotorRight, dirMotorLeft, speedMotorRight, speedMotorLeft):
 
   speedLeft = str(speedLeft)
   speedRight = str(speedRight)
-  port.write("#MOTS,")
+  speedLeft = bytes(speedLeft, 'utf-8')
+  speedRight = bytes(speedRight, 'utf-8')
+  port.write(b"#MOTS,")
   port.write(speedRight)
-  port.write(",")
+  port.write(b",")
   port.write(speedLeft)
-  port.write("!")
+  port.write(b"!")
 
   
 ########################################
@@ -659,28 +654,6 @@ def motorsWrite(dirMotorRight, dirMotorLeft, speedMotorRight, speedMotorLeft):
 # cordX : Coordinate axe X (millimeter)
 # cordY : Coordinate axe Y (millimeter)
 
-def robotGo(MaxSpeed, cordX, cordY):
-  posX = robotPositionX()
-  posY = robotPositionY()
-  posA = robotPositionOrientation()
-  
-  # calcul de la distance a parcourir
-  consigneDistance = sqrt( pow(cordX-posX,2)+pow(cordY-posY,2) )
-  
-  # calcul de l'orientation de consigne du robot
-  consigneOrientation = atan2( coord_Y-posY, coord_X-posX)
-  
-  # calcul erreur en distance
-  erreurDistance = consigneDistance;
-  if(erreurDistance > ERR_DIS_SAT):
-    erreurDistance = ERR_DIS_SAT
-
-  # calcul erreur en orientation
-  erreurOrientation = consigneOrientation - posA;
-  if(erreurOrientation > M_PI):
-    erreurOrientation -= M_2PI
-  if(erreurOrientation < -M_PI):
-   erreurOrientation += M_2PI
   
 # read robot position axe X
 def robotPositionX():
@@ -693,9 +666,9 @@ def robotPositionX():
   liste = []
   value = 0
   port.flushInput() # reset serial receive buffer
-  writeCommand("POX")
+  writeCommand(b"POX")
   value = readData()
-  value = __convListToFloat(value) 
+  value = float(value) 
   return (value/4) # conversion mm
   
   
@@ -710,9 +683,9 @@ def robotPositionY():
   liste = []
   value = 0
   port.flushInput() # reset serial receive buffer
-  writeCommand("POY")
+  writeCommand(b"POY")
   value = readData()
-  value = __convListToFloat(value) 
+  value = float(value) 
   return (value/4) 
   
 # read robot orientation
@@ -726,9 +699,9 @@ def robotPositionO():
   liste = []
   value = 0
   port.flushInput() # reset serial receive buffer
-  writeCommand("POO")
+  writeCommand(b"POO")
   value = readData()
-  value = __convListToFloat(value) 
+  value = float(value) 
   
   # conversion en degree
   value = ((value*180.0)/(3.14159))
@@ -748,9 +721,9 @@ def motorLeftSpeed():
   liste = []
   value = 0
   port.flushInput() # reset serial receive buffer
-  writeCommand("MLS")
+  writeCommand(b"MLS")
   value = readData()
-  value = __convListToFloat(value) 
+  value = float(value) 
   return (value)
   
 # read robot orientation
@@ -758,19 +731,19 @@ def motorRightSpeed():
   liste = []
   value = 0
   port.flushInput() # reset serial receive buffer
-  writeCommand("MRS")
+  writeCommand(b"MRS")
   value = readData()
-  value = __convListToFloat(value) 
+  value = float(value) 
   return (value)
   
   
 # motors disable
 def motorsDisable():
-  writeCommand("MDI")
+  writeCommand(b"MDI")
   
 # motors enable
 def motorsEnable():
-  writeCommand("MEN")
+  writeCommand(b"MEN")
   
 # init gripper of MRPiZ
 def init_gripper():
@@ -788,33 +761,33 @@ def buzzer(frequency):
         >> buzzer(200)
   """
   if frequency > -1 and frequency < 20001:
-    frequency = str(frequency)
-    port.write("#BUZ,")
+    frequency = bytes(str(frequency), 'utf-8')
+    port.write(b"#BUZ,")
     port.write(frequency)
-    port.write("!")
+    port.write(b"!")
   else:
     print("error frequency value")
 
 # buzzer start
 def buzzerStart():
-  writeCommand("BUZD")
+  writeCommand(b"BUZD")
   
 # buzzer stop
 def buzzerStop():
-  writeCommand("BUZS")
+  writeCommand(b"BUZS")
   
 # led RGB
 def ledRGB(red,green,blue):
-  red = str(red)
-  green = str(green)
-  blue = str(blue)
-  port.write("#RGB,")
+  red = bytes(str(red), 'utf-8')
+  green = bytes(str(green), 'utf-8')
+  blue = bytes(str(blue), 'utf-8')
+  port.write(b"#RGB,")
   port.write(red)
-  port.write(",")
+  port.write(b",")
   port.write(green)
-  port.write(",")
+  port.write(b",")
   port.write(blue)
-  port.write("!")
+  port.write(b"!")
 #---------------------------------------------------------------------
 #-------------[ MRPiZ encoders robot methods]-------------------------
 
@@ -828,9 +801,9 @@ def encoderLeft():
   liste = []
   value = 0
   port.flushInput() # reset serial receive buffer
-  writeCommand("EDL")
+  writeCommand(b"EDL")
   value = readData()
-  return __convListToUint(value)
+  return int(value)
   
 # the encoderleft
 def encoderRight():
@@ -842,9 +815,9 @@ def encoderRight():
   liste = []
   value = 0
   port.flushInput() # reset serial receive buffer
-  writeCommand("EDR")
+  writeCommand(b"EDR")
   value = readData()
-  return __convListToUint(value)
+  return int(value)
  
 #---------------------------------------------------------------------
 #-------------[ MRPiZ usb robot methods]------------------------------
@@ -860,9 +833,9 @@ def readVusb():
   liste = []
   value = 0
   port.flushInput() # reset serial receive buffer
-  writeCommand("VUSB")
+  writeCommand(b"VUSB")
   value = readData()
-  return __convListToFloat(value) 
+  return float(value) 
  
 #---------------------------------------------------------------------
 #-------------[ MRPiZ reset uc robot methods]------------------------------
@@ -874,7 +847,7 @@ def resetUc():
         Exemple:
         >> resetUc()
   """
-  writeCommand("RST")
+  writeCommand(b"RST")
   control_robot = False
 
   
@@ -888,9 +861,9 @@ def serial2Write(data):
         Exemple:
         >> serial2Write("HELLO")
   """
-  port.write("#SRLW,")
+  port.write(b"#SRLW,")
   port.write(data)
-  port.write("!")
+  port.write(b"!")
   
 
 #------------------------------------------------------------
@@ -916,22 +889,28 @@ def check_speed(speed, distance):
 def __convListToUint(liste):
   a=''
   i=0
+  result=0
   while i < (len(liste)):
     a = a + liste[i]
     i = i + 1
-  return(int(a))
+  try:
+    result = int(a)
+    return(result)
+  except ValueError:
+    pass
+  
 
 # write command
 def writeCommand(command):
-  port.write('#')
+  port.write(b'#')
   port.write(command)
-  port.write('!')
+  port.write(b'!')
   
 # read data
 def readData():
   chaine = port.readline()
-  pos1 = chaine.find('$')
-  pos2 = chaine.find('\n')
+  pos1 = chaine.find(b'$')
+  pos2 = chaine.find(b'\n')
   chaine = chaine[pos1+1:pos2]
   return chaine 
   
@@ -945,25 +924,25 @@ def __convListToFloat(liste):
   return(float(a))
   
 # the robot move forward with control (pas d'attente de la fin du trapeze)
-def __forwardControl(speed, distance):
+def forwardControl(speed, distance):
   """
         move forward mrpi1 with control
   """
   controlEnable()
 
   if control_robot == True:
-    print "Forward with control enable"
+    print("Forward with control enable")
     distance = int(distance)
     speed = str(speed)
     distance = str(distance)
-    port.write("#MFC,")
+    port.write(b"#MFC,")
     port.write(distance)
-    port.write(",")
+    port.write(b",")
     port.write(speed)
-    port.write("!")
+    port.write(b"!")
     port.flushInput() # reset serial receive buffer
   else:
-    print "error : control robot disable"
+    print("error : control robot disable")
   
 # the robot move forward with control (pas d'attente de la fin du trapeze)
 def __backControl(speed, distance):
@@ -973,18 +952,18 @@ def __backControl(speed, distance):
   controlEnable()
 
   if control_robot == True:
-    print "Forward with control enable"
+    print("Forward with control enable")
     distance = int(distance)
     speed = str(speed)
     distance = str(distance)
-    port.write("#MBC,")
+    port.write(b"#MBC,")
     port.write(distance)
-    port.write(",")
+    port.write(b",")
     port.write(speed)
-    port.write("!")
+    port.write(b"!")
     port.flushInput() # reset serial receive buffer
   else:
-    print "error : control robot disable"
+    print("error : control robot disable")
 
 	
 # the robot move forward with control (pas d'attente de la fin du trapeze)
@@ -995,18 +974,18 @@ def __turnLeftControl(speed, angle):
   controlEnable()
 
   if control_robot == True:
-    print "Forward with control enable"
+    print("Forward with control enable")
     angle = int(angle)
     speed = str(speed)
     angle = str(angle)
-    port.write("#TLC,")
+    port.write(b"#TLC,")
     port.write(angle)
-    port.write(",")
+    port.write(b",")
     port.write(speed)
-    port.write("!")
+    port.write(b"!")
     port.flushInput() # reset serial receive buffer
   else:
-    print "error : control robot disable"
+    print("error : control robot disable")
 
 
 # the robot move forward with control (pas d'attente de la fin du trapeze)
@@ -1017,18 +996,18 @@ def __turnRightControl(speed, angle):
   controlEnable()
 
   if control_robot == True:
-    print "Forward with control enable"
+    print("Forward with control enable")
     angle = int(angle)
     speed = str(speed)
     angle = str(angle)
-    port.write("#TRC,")
+    port.write(b"#TRC,")
     port.write(angle)
-    port.write(",")
+    port.write(b",")
     port.write(speed)
-    port.write("!")
+    port.write(b"!")
     port.flushInput() # reset serial receive buffer
   else:
-    print "error : control robot disable"
+    print("error : control robot disable")
 
 
 # control robot (postion/orientation disable)
